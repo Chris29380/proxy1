@@ -34,6 +34,12 @@ install_nginx(){
 
 install_nginx
 
+install_ssl(){
+    echo
+    echo -e "${COLOR2} Certbot Installation ... ${NC}"
+    apt install -y certbot python3-certbot-nginx
+}
+
 install_ssl
 
 install_php(){
