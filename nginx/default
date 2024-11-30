@@ -1,0 +1,63 @@
+server {
+	listen 80;
+	listen [::]:80;	
+
+    server_name _;
+
+    root /var/www/cdtfivemprotect/;
+
+    error_page 403 /e403.php;
+
+	location / {
+        limit_req zone=flood burst=12 delay=8;
+        return 403;
+	}
+	
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+        include snippets/fastcgi-php.conf;
+    }
+}
+
+map $referer $loc {
+    https://proxy1.cdtfivem.com    loc_proxy1;
+    https://proxyf.cdtfivem.com    loc_proxyf;
+}
+
+server {
+
+    listen 443 ssl;
+    listen [::]:443;
+
+    ssl_certificate /etc/letsencrypt/live/proxy1.cdtfivem.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/proxy1.cdtfivem.com/privkey.pem;
+
+    root /var/www/cdtfivemprotect/;
+    
+    error_page 403 /e403.php;
+    error_page 404 /e404.php;
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+        include snippets/fastcgi-php.conf;
+    }
+
+    location / {
+        limit_req zone=flood burst=12 delay=8;
+        try_files /dev/null @$loc;
+    }
+
+    location @loc_proxy1 {
+        retunr 403;
+    }
+
+    location @loc_proxyf {
+        retunr 404;
+    }
+
+}
+
