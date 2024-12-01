@@ -21,11 +21,6 @@ server {
     }
 }
 
-map $referer $loc {
-    https://proxy1.cdtfivem.com    loc_proxy1;
-    https://proxyf.cdtfivem.com    loc_proxyf;
-}
-
 server {
 
     listen 443 ssl;
@@ -33,6 +28,8 @@ server {
 
     ssl_certificate /etc/letsencrypt/live/proxy1.cdtfivem.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/proxy1.cdtfivem.com/privkey.pem;
+
+    server_name proxy1.cdtfivem.com;
 
     root /var/www/cdtfivemprotect/;
     
@@ -48,16 +45,17 @@ server {
 
     location / {
         limit_req zone=flood burst=12 delay=8;
-        try_files /dev/null @$loc;
+        return 403;
     }
 
-    location @loc_proxy1 {
-        retunr 403;
+    location /proxyf {
+        limit_req zone=flood burst=12 delay=8;
+        try_files $uri $uri/ =404;
     }
 
-    location @loc_proxyf {
-        retunr 404;
+    location /cdtserver {
+        limit_req zone=flood burst=12 delay=8;
+        return 404;
     }
-
 }
 
